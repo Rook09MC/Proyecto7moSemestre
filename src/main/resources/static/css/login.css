@@ -1,0 +1,118 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Fondo degradado con animación suave */
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(-45deg, #4e54c8, #8f94fb, #4e54c8, #8f94fb);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+}
+
+/* Animación de fondo */
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Contenedor del login */
+.login-container {
+    width: 100%;
+    max-width: 380px;
+    padding: 20px;
+}
+
+/* Tarjeta del login */
+.login-card {
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 30px 25px;
+    border-radius: 15px;
+    box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+    text-align: center;
+    animation: fadeIn 1s ease forwards;
+}
+
+/* Animación de aparición */
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(-20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.login-card h2 {
+    margin-bottom: 25px;
+    color: #333;
+}
+
+/* Grupo de inputs con iconos */
+.input-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-group i {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    color: #666;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px 12px 12px 40px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: 0.3s;
+}
+
+.input-group input:focus {
+    border-color: #4e54c8;
+    box-shadow: 0 0 5px rgba(78,84,200,0.5);
+}
+
+/* Botón animado */
+.btn-login {
+    width: 100%;
+    padding: 12px;
+    background: #4e54c8;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.3s;
+}
+
+.btn-login:hover {
+    background: #8f94fb;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(78,84,200,0.4);
+}
+.error-message {
+    background-color: #ff4c4c;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    animation: shake 0.3s;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Animación de “shake” */
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+}

@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class Atm7smstrApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(Atm7smstrApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(Atm7smstrApplication.class, args);
+    }
 
 }
