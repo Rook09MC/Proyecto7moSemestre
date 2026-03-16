@@ -92,7 +92,7 @@ public class AuthService {
     }
 
     // verificar pin
-    if(!t.getPin().equals(pin)){
+    if(!t.getPinHash().equals(pin)){
 
         int intentos = t.getIntentosFallidos() + 1;
         t.setIntentosFallidos(intentos);

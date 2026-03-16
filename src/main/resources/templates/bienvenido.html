@@ -6,6 +6,13 @@
 </head>
 <body>
     <h2>Bienvenido al Cajero Automático</h2>
+    
     <p th:text="${mensajeExito}"></p>
+    
+    <div th:if="${tarjeta != null}">
+        <p>Usuario: <span th:text="${tarjeta.account.usuario.firstName}">Nombre</span></p>
+        <p>Email: <span th:text="${tarjeta.account.usuario.email}">Email</span></p>
+    </div>
+
 </body>
 </html>

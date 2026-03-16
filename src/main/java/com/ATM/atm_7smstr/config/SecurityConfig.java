@@ -12,24 +12,14 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            // 🔹 Desactivar CSRF (solo para pruebas de API REST)
             .csrf(csrf -> csrf.disable())
 
-            // 🔹 Permitir libre acceso a tu API de autenticación y otros recursos
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // endpoints de API
-                .requestMatchers("/auth/**", "/css/**", "/js/**").permitAll() // login web y recursos estáticos
-                .anyRequest().authenticated() // todo lo demás requiere autenticación
+                .anyRequest().permitAll()
             )
 
-            // 🔹 Desactivar login web por defecto de Spring Security
             .formLogin(form -> form.disable())
-
-            // 🔹 Desactivar HTTP Basic
-            .httpBasic(basic -> basic.disable())
-
-            // 🔹 Deshabilitar frameOptions (para H2 o pruebas)
-            .headers(headers -> headers.frameOptions(frame -> frame.disable()));
+            .httpBasic(basic -> basic.disable());
 
         return http.build();
     }
