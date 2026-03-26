@@ -1,43 +1,23 @@
 package com.ATM.atm_7smstr.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data // 🔥 Genera getters, setters, toString, equals, hashCode
+@AllArgsConstructor // 🔥 Constructor con parámetros
+@NoArgsConstructor  // 🔥 Constructor vacío (necesario para Spring)
 public class ApiResponse {
 
-    private String status;  // "OK" o "ERROR"
-    private String message; // mensaje para el usuario
+    private String status;
+    private String message;
 
-    // 🔹 Constructor vacío necesario para Spring/Jackson
-    public ApiResponse() {}
-
-    // 🔹 Constructor con parámetros
-    public ApiResponse(String status, String message) {
-        this.status = status;
-        this.message = message;
+    // 🔥 MÉTODOS ESTÁTICOS (se mantienen, son buena práctica)
+    public static ApiResponse ok(String message){
+        return new ApiResponse("OK", message);
     }
 
-    // 🔹 Getters
-    public String getStatus() {
-        return status;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    // 🔹 Setters necesarios para Jackson
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    // 🔹 Opcional: para depuración
-    @Override
-    public String toString() {
-        return "ApiResponse{" +
-                "status='" + status + '\'' +
-                ", message='" + message + '\'' +
-                '}';
+    public static ApiResponse error(String message){
+        return new ApiResponse("ERROR", message);
     }
 }

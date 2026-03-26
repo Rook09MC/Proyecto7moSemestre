@@ -32,30 +32,41 @@ public class LoginWebController {
     @PostMapping("/login")
     public String procesarLogin(@ModelAttribute LoginRequest loginRequest, Model model) {
         // 1. Validar las credenciales
-        ApiResponse response = authService.validarPin(loginRequest.getNumeroTarjeta(), loginRequest.getPin());
-        
-        System.out.println("Respuesta AuthService: " + response.getStatus() + " - " + response.getMessage());
+        ApiResponse response = authService.validarPin(
+                loginRequest.getNumeroTarjeta(),
+                loginRequest.getPin()
+        );
+
+        // ❌ ELIMINADO: System.out.println (código sucio)
 
         if ("OK".equals(response.getStatus())) {
-            // 2. Obtener el objeto Tarjeta con toda su relación (Account -> Usuario)
-            Tarjeta tarjeta = tarjetaService.obtenerTarjetaConUsuario(loginRequest.getNumeroTarjeta());
-            
-            // 3. ENVIAR EL OBJETO AL MODELO (Esto soluciona el error de Thymeleaf)
+            // 2. Obtener el objeto Tarjeta con toda su relación
+            Tarjeta tarjeta = tarjetaService.obtenerTarjetaConUsuario(
+                    loginRequest.getNumeroTarjeta()
+            );
+
+            // 3. Enviar objeto al modelo
             model.addAttribute("tarjeta", tarjeta);
 
-            // 4. Lógica de seguridad para el mensaje de bienvenida
-            if (tarjeta != null && tarjeta.getAccount() != null && tarjeta.getAccount().getUsuario() != null) {
-                String nombreUsuario = tarjeta.getAccount().getUsuario().getFirstName();
-                model.addAttribute("mensajeExito", "✅ ¡Bienvenido de nuevo, " + nombreUsuario + "!");
-            } else {
-                model.addAttribute("mensajeExito", "✅ Acceso correcto (Datos de perfil no encontrados).");
+            // 🔥 CAMBIO: variable auxiliar para simplificar lógica
+            String nombreUsuario = "Usuario"; // <-- NUEVO
+
+            // 🔥 CAMBIO: condición simplificada
+            if (tarjeta != null &&
+                tarjeta.getAccount() != null &&
+                tarjeta.getAccount().getUsuario() != null) {
+
+                nombreUsuario = tarjeta.getAccount().getUsuario().getFirstName(); // <-- MODIFICADO
             }
-            
+
+            // 🔥 CAMBIO: mensaje único (más limpio)
+            model.addAttribute("mensajeExito",
+                    "✅ ¡Bienvenido de nuevo, " + nombreUsuario + "!"); // <-- MODIFICADO
+
             return "bienvenido"; 
         } else {
             // Si el PIN es incorrecto o la tarjeta no existe
             model.addAttribute("mensajeError", response.getMessage());
-            // Es necesario volver a enviar el objeto de la solicitud para no romper el formulario
             model.addAttribute("loginRequest", loginRequest);
             return "login"; 
         }

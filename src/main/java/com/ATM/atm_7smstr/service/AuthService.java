@@ -1,9 +1,8 @@
 package com.ATM.atm_7smstr.service;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.ATM.atm_7smstr.dto.ApiResponse;
 import com.ATM.atm_7smstr.entity.Tarjeta;
@@ -20,97 +19,117 @@ public class AuthService {
     @Autowired
     private SecurityLogRepository securityLogRepository;
 
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
+    // ===========================
+    // 🔥 CONSTANTES (NUEVO)
+    // ===========================
+    private static final String ESTADO_ACTIVA = "ACTIVA";
+    private static final String ESTADO_BLOQUEADA = "BLOQUEADA";
+
+    private static final String LOG_LOGIN = "LOGIN";
+    private static final String LOG_VALIDACION = "VALIDACION_TARJETA";
+    private static final String LOG_SEGURIDAD = "SEGURIDAD";
+
+    private static final int MAX_INTENTOS = 3;
+
+    // ===========================
+    // 🔥 MÉTODO REUTILIZABLE LOG (YA LO TENÍAS)
+    // ===========================
+    private void log(String tipo, String mensaje){
+        securityLogRepository.save(new SecurityLog(tipo, mensaje));
+    }
+
+    // ===========================
+    // 🔥 MÉTODO REUTILIZABLE PARA BUSCAR TARJETA (NUEVO)
+    // ===========================
+    private Tarjeta obtenerTarjeta(String numeroTarjeta){
+        return tarjetaRepository.findByNumeroTarjeta(numeroTarjeta).orElse(null);
+    }
+
+    // ===========================
+    // 🔥 MÉTODO REUTILIZABLE INTENTOS (MEJORADO)
+    // ===========================
+    private void manejarIntentosFallidos(Tarjeta t){
+        int intentos = t.getIntentosFallidos() + 1;
+        t.setIntentosFallidos(intentos);
+
+        // 🔥 CAMBIO: uso de constante MAX_INTENTOS
+        if(intentos >= MAX_INTENTOS){
+            t.setBloqueada(true);
+            t.setEstado(ESTADO_BLOQUEADA);
+
+            // 🔥 CAMBIO: uso de constantes en log
+            log(LOG_SEGURIDAD, "Tarjeta bloqueada por intentos: " + t.getNumeroTarjeta());
+        }
+    }
+
+    // ===========================
+    // VALIDAR TARJETA
+    // ===========================
     public ApiResponse validarTarjeta(String numeroTarjeta){
 
-        Optional<Tarjeta> tarjeta = tarjetaRepository.findByNumeroTarjeta(numeroTarjeta);
+        // 🔥 CAMBIO: uso de método reutilizable
+        Tarjeta t = obtenerTarjeta(numeroTarjeta);
 
-        if(tarjeta.isEmpty()){
-
-            securityLogRepository.save(
-                new SecurityLog("VALIDACION_TARJETA", "Tarjeta inexistente: " + numeroTarjeta)
-            );
-
-            return new ApiResponse("ERROR","Tarjeta inexistente");
+        if(t == null){
+            log(LOG_VALIDACION, "Tarjeta inexistente: " + numeroTarjeta);
+            return ApiResponse.error("Tarjeta inexistente");
         }
 
-        Tarjeta t = tarjeta.get();
-
-        // verificar si está bloqueada
         if(t.isBloqueada()){
-
-            securityLogRepository.save(
-                new SecurityLog("VALIDACION_TARJETA", "Tarjeta bloqueada: " + numeroTarjeta)
-            );
-
-            return new ApiResponse("ERROR","Tarjeta bloqueada");
+            log(LOG_VALIDACION, "Tarjeta bloqueada: " + numeroTarjeta);
+            return ApiResponse.error("Tarjeta bloqueada");
         }
 
-        // verificar estado
-        if(!t.getEstado().equals("ACTIVA")){
-
-            securityLogRepository.save(
-                new SecurityLog("VALIDACION_TARJETA", "Tarjeta inactiva: " + numeroTarjeta)
-            );
-
-            return new ApiResponse("ERROR","Tarjeta inactiva");
+        // 🔥 CAMBIO: equalsIgnoreCase + constante
+        if(!ESTADO_ACTIVA.equalsIgnoreCase(t.getEstado())){
+            log(LOG_VALIDACION, "Tarjeta inactiva: " + numeroTarjeta);
+            return ApiResponse.error("Tarjeta inactiva");
         }
 
-        // aumentar intentos
-        int intentos = t.getIntentosFallidos() + 1;
-        t.setIntentosFallidos(intentos);
+        // 🔥 LIMPIO: ya no hay intentos aquí (correcto)
+        log(LOG_VALIDACION, "Tarjeta válida: " + numeroTarjeta);
 
-        // bloquear en el intento 3
-        if(intentos >= 3){
-            t.setBloqueada(true);
-            t.setEstado("BLOQUEADA");
-
-            securityLogRepository.save(
-                new SecurityLog("SEGURIDAD", "Tarjeta bloqueada por 3 intentos: " + numeroTarjeta)
-            );
-        }
-
-        tarjetaRepository.save(t);
-
-        securityLogRepository.save(
-            new SecurityLog("VALIDACION_TARJETA", "Intento #" + intentos + " tarjeta: " + numeroTarjeta)
-        );
-
-        return new ApiResponse("OK","Tarjeta válida");
+        return ApiResponse.ok("Tarjeta válida");
     }
+
+    // ===========================
+    // VALIDAR PIN
+    // ===========================
     public ApiResponse validarPin(String numeroTarjeta, String pin){
 
-    Optional<Tarjeta> tarjeta = tarjetaRepository.findByNumeroTarjeta(numeroTarjeta);
+        // 🔥 CAMBIO: uso de método reutilizable
+        Tarjeta t = obtenerTarjeta(numeroTarjeta);
 
-    if(tarjeta.isEmpty()){
-        return new ApiResponse("ERROR","Tarjeta inexistente");
-    }
-
-    Tarjeta t = tarjeta.get();
-
-    if(t.isBloqueada()){
-        return new ApiResponse("ERROR","Tarjeta bloqueada");
-    }
-
-    // verificar pin
-    if(!t.getPinHash().equals(pin)){
-
-        int intentos = t.getIntentosFallidos() + 1;
-        t.setIntentosFallidos(intentos);
-
-        if(intentos >= 3){
-            t.setBloqueada(true);
-            t.setEstado("BLOQUEADA");
+        if(t == null){
+            log(LOG_LOGIN, "Tarjeta inexistente: " + numeroTarjeta);
+            return ApiResponse.error("Tarjeta inexistente");
         }
 
+        if(t.isBloqueada()){
+            log(LOG_LOGIN, "Intento con tarjeta bloqueada: " + numeroTarjeta);
+            return ApiResponse.error("Tarjeta bloqueada");
+        }
+
+        // 🔥 CAMBIO IMPORTANTE: BCrypt (ANTES era .equals)
+        if(!passwordEncoder.matches(pin, t.getPinHash())){
+
+            // 🔥 CAMBIO: método reutilizable
+            manejarIntentosFallidos(t);
+            tarjetaRepository.save(t);
+
+            log(LOG_LOGIN, "PIN incorrecto intento #" + t.getIntentosFallidos() + " tarjeta: " + numeroTarjeta);
+            return ApiResponse.error("PIN incorrecto. Intento #" + t.getIntentosFallidos());
+        }
+
+        // 🔥 CAMBIO: orden lógico mejorado
+        log(LOG_LOGIN, "Acceso exitoso: " + numeroTarjeta);
+
+        t.setIntentosFallidos(0);
         tarjetaRepository.save(t);
 
-        return new ApiResponse("ERROR","PIN incorrecto. Intento #" + intentos);
+        return ApiResponse.ok("Acceso permitido");
     }
-
-    // PIN correcto
-    t.setIntentosFallidos(0);
-    tarjetaRepository.save(t);
-
-    return new ApiResponse("OK","Acceso permitido");
-}
 }

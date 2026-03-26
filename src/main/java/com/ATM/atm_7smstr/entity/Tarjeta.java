@@ -1,7 +1,6 @@
 package com.ATM.atm_7smstr.entity;
 
 import jakarta.persistence.*;
-import com.ATM.atm_7smstr.entity.Account;
 
 @Entity
 @Table(name = "tarjetas")
